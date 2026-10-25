@@ -1,21 +1,23 @@
-# Three-agent suite: fresh repository deployment
+# Three-agent Render deployment
 
-This repository packages the invoice A2A agent, mailroom agent, and incident agent in one Render Web Service. It keeps each API contract on the same HTTPS origin:
+This bundle serves all three agents from one HTTPS origin and one Render Web Service:
 
 - Invoice A2A: `/.well-known/agent-card.json`, `/a2a/message:send`, `/a2a/tasks...`
-- Mailroom: `POST /`
+- Mailroom: `POST /` and `GET /healthz`
 - Incident: `/v2/incidents...`
 
-All three use one OpenAI API key and the `gpt-4o-mini` chat-completions model. Task state uses the existing Render Postgres database named `invoice-agent-db`, so the Blueprint does not create another free database. This connection requires that database to exist in the same Render workspace.
+All three agents call Gemini through Google's OpenAI-compatible chat-completions endpoint. Configure `GEMINI_API_KEY`, `GEMINI_BASE_URL`, and `GEMINI_MODEL`. Their task/evaluation state is stored in the shared Render Postgres database.
 
-## Create a new GitHub repository and deploy
+## Deploy
 
-1. Push these repository files to a new GitHub repository.
-2. In Render, choose **New → Blueprint**, connect the new repository, and deploy `render.yaml`.
-3. Enter your OpenAI API key for `OPENAI_API_KEY`. The API key needs available credits and usage quota; keep it in Render secrets, not GitHub.
-4. The new service will have its own `onrender.com` hostname. The invoice Agent Card reads Render's runtime hostname automatically, so no hostname edit is needed.
-5. After the service is Live, visit `https://<new-render-host>/.well-known/agent-card.json`. Submit `https://<new-render-host>/a2a/` for the invoice agent. The same host serves the mailroom at `/` and incident routes at `/v2/incidents`.
+1. In the GitHub repository already connected to your invoice Render service, replace its root files with the contents of this folder. Keep the service name and existing `invoice-agent-db` Blueprint resource.
+2. Commit and push. Render should redeploy the existing service from the same repository; do not create a second Render service or a second free Postgres database.
+3. Enter your Gemini API key for `GEMINI_API_KEY` when prompted. The selected Gemini model must be available to the AI Studio project and within its quota.
+4. Wait for the existing service to become Live. The invoice Agent Card advertises the current Render hostname with `/a2a/`.
+5. Open `https://<your-render-host>/.well-known/agent-card.json` to verify the invoice card. Use `https://<your-render-host>/a2a/` as the invoice A2A base URL. The same hostname serves mailroom at `/` and incident routes under `/v2/incidents`.
 
-The Render Blueprint references the existing `invoice-agent-db` database rather than creating another one. If Render cannot resolve that database from the new Blueprint, create the Web Service and set `DATABASE_URL` to the existing database's internal connection string in Render's Environment settings.
+The free web plan sleeps while idle. The existing free Postgres database has a 1 GB limit and expires after 30 days, and free web compute may restart. The included PostgreSQL integration persists app state across normal requests and service restarts while the database exists. Use it only for synthetic grader data, not production records. [Render free plan details](https://render.com/docs/free).
 
-Render's free Web Service may sleep while idle. Its free Postgres database has a 1 GB limit and expires 30 days after creation. This setup is for synthetic grader data, not production records.
+## Local run
+
+Requires Docker and a PostgreSQL `DATABASE_URL`, Node.js 22, Python dependencies from `requirements.txt`, and npm dependencies from `package.json`. Set `GEMINI_API_KEY`, `GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`, and `GEMINI_MODEL=gemini-3.8-flash`. Start the web app with `uvicorn invoice_app:app --host 0.0.0.0 --port 10000`; its startup hook starts the incident server on the loopback interface.

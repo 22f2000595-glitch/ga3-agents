@@ -1,22 +1,28 @@
 services:
   - type: web
-    name: three-agent-suite
+    name: invoice-action-agent
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /.well-known/agent-card.json
     envVars:
+      - key: A2A_BASE_URL
+        value: https://invoice-action-agent-2eh3.onrender.com/a2a/
       - key: A2A_BEARER_TOKEN
         generateValue: true
-      - key: OPENAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
-      - key: OPENAI_BASE_URL
-        value: https://api.openai.com/v1
-      - key: OPENAI_MODEL
-        value: gpt-4o-mini
+      - key: GEMINI_BASE_URL
+        value: https://generativelanguage.googleapis.com/v1beta/openai
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
       - key: DATABASE_URL
         fromDatabase:
           name: invoice-agent-db
           property: connectionString
 
+databases:
+  - name: invoice-agent-db
+    databaseName: invoice_agent
+    plan: free

@@ -17,10 +17,10 @@ from fastapi.responses import JSONResponse, Response
 BASE_URL = os.getenv("A2A_BASE_URL") or ("https://" + os.getenv("RENDER_EXTERNAL_HOSTNAME", "YOUR_PUBLIC_HOST") + "/a2a/")
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 DB_PATH = os.getenv("INVOICE_DB_PATH", "/data/invoice-agent.sqlite3")
-MODEL = os.getenv("OPENAI_MODEL", os.getenv("AI_MODEL", "gpt-4o-mini"))
-AI_BASE = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+AI_BASE = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
 AI_URL = AI_BASE.rstrip("/") if AI_BASE.rstrip("/").endswith("/chat/completions") else AI_BASE.rstrip("/") + "/chat/completions"
-AI_KEY = os.getenv("OPENAI_API_KEY", os.getenv("AI_API_KEY", ""))
+AI_KEY = os.getenv("GEMINI_API_KEY", "")
 PROPOSAL_MEDIA = "application/vnd.ga5.invoice-action-proposals+json"
 RECEIPT_MEDIA = "application/vnd.ga5.invoice-action-receipts+json"
 BATCH_MEDIA = "application/vnd.ga5.invoice-claim-batch+json"
@@ -117,7 +117,7 @@ def decision_prompt(packages):
 
 def ask_model(packages):
     if not AI_KEY:
-        raise RuntimeError("OPENAI_API_KEY is not configured")
+        raise RuntimeError("GEMINI_API_KEY is not configured")
     body = {"model": MODEL, "temperature": 0, "response_format": {"type": "json_object"}, "messages": [{"role": "user", "content": decision_prompt(packages)}]}
     r = httpx.post(AI_URL, headers={"Authorization": "Bearer " + AI_KEY, "Content-Type": "application/json"}, json=body, timeout=34)
     r.raise_for_status()
