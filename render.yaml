@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: three-agent-suite
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /.well-known/agent-card.json
+    envVars:
+      - key: A2A_BEARER_TOKEN
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        value: https://api.openai.com/v1
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: DATABASE_URL
+        fromDatabase:
+          name: invoice-agent-db
+          property: connectionString
+
