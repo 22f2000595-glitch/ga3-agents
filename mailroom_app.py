@@ -134,7 +134,8 @@ async def body(r):
 async def healthz():
  return {"status":"ok"}
 @app.post("/")
-async def api(r:Request):
+@app.post("/v1/mailroom/actions")
+async def api(r: Request):
  try:
   b=await body(r); Envelope.model_validate(b)
   if b["profile"]!=PROFILE:return error("unsupported profile",400)
