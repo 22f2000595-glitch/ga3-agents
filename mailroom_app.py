@@ -3,10 +3,10 @@ from contextlib import contextmanager
 from typing import Any
 from fastapi import FastAPI, Request
 import httpx
+import logging
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, ValidationError
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-import logging
 
 PROFILE = "ga5-mailroom-action-gate/v2"
 MAX_BODY = 4 * 1024 * 1024
@@ -136,21 +136,20 @@ async def healthz():
  return {"status":"ok"}
 @app.post("/")
 @app.post("/v1/mailroom/actions")
-async def api(r: Request):
+async def api(r:Request):
  try:
   b=await body(r); Envelope.model_validate(b)
   if b["profile"]!=PROFILE:return error("unsupported profile",400)
   if b["operation"]=="propose":return await propose(b)
   if b["operation"]=="commit":return await commit(b)
   return error("invalid operation",400)
-  except (ValidationError, ValueError) as e:
-  return error(str(e)[:300], 422)
+ except (ValidationError,ValueError) as e:return error(str(e)[:300],422)
  except RuntimeError as e:
   logging.exception("Mailroom runtime error")
-  return error(str(e)[:200], 503)
+  return error(str(e)[:200],503)
  except Exception:
   logging.exception("Mailroom request failed")
-  return error("model or service error", 503)
+  return error("model or service error",503)
 async def propose(b):
  problem=validate_propose(b)
  if problem:return error(problem)
