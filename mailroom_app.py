@@ -6,6 +6,7 @@ import httpx
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, ValidationError
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+import logging
 
 PROFILE = "ga5-mailroom-action-gate/v2"
 MAX_BODY = 4 * 1024 * 1024
@@ -142,9 +143,14 @@ async def api(r: Request):
   if b["operation"]=="propose":return await propose(b)
   if b["operation"]=="commit":return await commit(b)
   return error("invalid operation",400)
- except (ValidationError,ValueError) as e:return error(str(e)[:300],422)
- except RuntimeError as e:return error(str(e)[:200],503)
- except Exception:return error("model or service error",503)
+  except (ValidationError, ValueError) as e:
+  return error(str(e)[:300], 422)
+ except RuntimeError as e:
+  logging.exception("Mailroom runtime error")
+  return error(str(e)[:200], 503)
+ except Exception:
+  logging.exception("Mailroom request failed")
+  return error("model or service error", 503)
 async def propose(b):
  problem=validate_propose(b)
  if problem:return error(problem)
