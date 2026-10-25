@@ -17,8 +17,8 @@ from fastapi.responses import JSONResponse, Response
 BASE_URL = os.getenv("A2A_BASE_URL") or ("https://" + os.getenv("RENDER_EXTERNAL_HOSTNAME", "YOUR_PUBLIC_HOST") + "/a2a/")
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 DB_PATH = os.getenv("INVOICE_DB_PATH", "/data/invoice-agent.sqlite3")
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
-AI_BASE = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
+MODEL = os.getenv("GEMINI_MODEL", "qwen/qwen3.8-27b")
+AI_BASE = os.getenv("GEMINI_BASE_URL", "https://api.groq.com/openai/v1")
 AI_URL = AI_BASE.rstrip("/") if AI_BASE.rstrip("/").endswith("/chat/completions") else AI_BASE.rstrip("/") + "/chat/completions"
 AI_KEY = os.getenv("GEMINI_API_KEY", "")
 PROPOSAL_MEDIA = "application/vnd.ga5.invoice-action-proposals+json"
